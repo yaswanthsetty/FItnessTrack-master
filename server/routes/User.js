@@ -5,7 +5,8 @@ import {
   addWorkout,
   getUserDashboard,
   getWorkoutsByDate,
-  calculateBMI
+  calculateBMI,
+  calculateDietPlan
 } from "../controllers/User.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -17,6 +18,6 @@ router.get("/dashboard", verifyToken, getUserDashboard);
 router.get("/workout", verifyToken, getWorkoutsByDate);
 router.post("/workout", verifyToken, addWorkout);
 router.post("/calculateBMI", verifyToken, calculateBMI);
-
+router.post("/calculateDietPlan",verifyToken, calculateDietPlan);
 
 export default router;

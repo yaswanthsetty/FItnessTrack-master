@@ -62,6 +62,69 @@ export const UserLogin = async (req, res, next) => {
   }
 };
 
+
+
+
+// Calculate diet plan based on current BMI, target BMI, duration, caloric intake, and expenditure
+export const calculateDietPlan = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const { currentBMI, targetBMI, duration, currentIntake, currentExpenditure } = req.body;
+
+    if (!currentBMI || !targetBMI || !duration || !currentIntake || !currentExpenditure) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    // Calculate weight change needed
+    const weightChange = (currentBMI - targetBMI) * 0.3; // Approximate weight change for BMI change
+    const calorieDeficitPerKg = 7700; // Approximate calories per kg
+    const totalCalorieChange = weightChange * calorieDeficitPerKg;
+
+    // Calculate daily caloric change needed
+    const dailyCalorieChange = totalCalorieChange / duration;
+
+    // Calculate current net caloric balance
+    const currentNetCalories = currentIntake - currentExpenditure;
+
+    // Determine new caloric intake or expenditure needed
+    let calorieRecommendation;
+    if (dailyCalorieChange < 0) {
+      calorieRecommendation = `Increase your daily intake by ${Math.abs(
+        dailyCalorieChange
+      )} calories to meet your goal.`;
+    } else {
+      calorieRecommendation = `Decrease your daily intake by ${dailyCalorieChange} calories to meet your goal.`;
+    }
+
+    // Generate a simple diet plan based on caloric recommendation
+    const dietPlan = [];
+    if (dailyCalorieChange < 0) {
+      dietPlan.push("Include more protein-rich foods in your diet.");
+      dietPlan.push("Consider healthy snacks between meals.");
+    } else {
+      dietPlan.push("Focus on whole grains and vegetables.");
+      dietPlan.push("Avoid sugary drinks and snacks.");
+    }
+
+    return res.status(200).json({
+      calorieRecommendation,
+      dietPlan,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 export const getUserDashboard = async (req, res, next) => {
   try {
     const userId = req.user?.id;

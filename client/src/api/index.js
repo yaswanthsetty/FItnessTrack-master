@@ -27,3 +27,9 @@ export const calculateBMI = async (token, data) =>
   await API.post("/user/calculateBMI", data, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  export const calculateDietPlan = async (token, data) =>
+    await API.post("/user/calculateDietPlan", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  

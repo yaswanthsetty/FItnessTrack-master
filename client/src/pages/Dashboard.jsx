@@ -8,6 +8,7 @@ import AddWorkout from "../components/AddWorkout";
 import WorkoutCard from "../components/cards/WorkoutCard";
 import { addWorkout, getDashboardDetails, getWorkouts } from "../api";
 import BMICalculator from "../components/BMICalculator";
+import DietPlanCalculator from "../components/DietPlanCalculator";
 
 const Container = styled.div`
   flex: 1;
@@ -133,7 +134,8 @@ const Dashboard = () => {
             addNewWorkout={addNewWorkout}
             buttonLoading={buttonLoading}
           />
-          <BMICalculator token={token} /> {/* Pass the token to BMICalculator */}
+          <BMICalculator token={token} />
+          <DietPlanCalculator token={token} /> {/* Add this line */}
         </FlexWrap>
 
         <Section>
