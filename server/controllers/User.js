@@ -82,7 +82,6 @@ export const getUserDashboard = async (req, res, next) => {
       currentDateFormatted.getDate() + 1
     );
 
-    //calculte total calories burnt
     const totalCaloriesBurnt = await Workout.aggregate([
       { $match: { user: user._id, date: { $gte: startToday, $lt: endToday } } },
       {
@@ -93,19 +92,16 @@ export const getUserDashboard = async (req, res, next) => {
       },
     ]);
 
-    //Calculate total no of workouts
     const totalWorkouts = await Workout.countDocuments({
       user: userId,
       date: { $gte: startToday, $lt: endToday },
     });
 
-    //Calculate average calories burnt per workout
     const avgCaloriesBurntPerWorkout =
       totalCaloriesBurnt.length > 0
         ? totalCaloriesBurnt[0].totalCaloriesBurnt / totalWorkouts
         : 0;
 
-    // Fetch category of workouts
     const categoryCalories = await Workout.aggregate([
       { $match: { user: user._id, date: { $gte: startToday, $lt: endToday } } },
       {
@@ -115,8 +111,6 @@ export const getUserDashboard = async (req, res, next) => {
         },
       },
     ]);
-
-    //Format category data for pie chart
 
     const pieChartData = categoryCalories.map((category, index) => ({
       id: index,
@@ -166,6 +160,19 @@ export const getUserDashboard = async (req, res, next) => {
       );
     }
 
+    // Generate diet and workout recommendations based on total calories burnt
+    let dailyCaloriesBurnedRecommendation = "";
+    if (totalCaloriesBurnt.length > 0) {
+      const totalCalories = totalCaloriesBurnt[0].totalCaloriesBurnt;
+      if (totalCalories < 200) {
+        dailyCaloriesBurnedRecommendation = "Increase workout intensity to burn more calories.";
+      } else if (totalCalories >= 200 && totalCalories < 500) {
+        dailyCaloriesBurnedRecommendation = "Maintain current workout level to stay fit.";
+      } else {
+        dailyCaloriesBurnedRecommendation = "Consider reducing workout intensity if feeling fatigued.";
+      }
+    }
+
     return res.status(200).json({
       totalCaloriesBurnt:
         totalCaloriesBurnt.length > 0
@@ -178,11 +185,137 @@ export const getUserDashboard = async (req, res, next) => {
         caloriesBurned: caloriesBurnt,
       },
       pieChartData: pieChartData,
+      dailyCaloriesBurnedRecommendation,
     });
   } catch (err) {
     next(err);
   }
 };
+
+
+export const calculateBMI = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { height, weight } = req.body;
+    if (!height || !weight) {
+      return res.status(400).json({ message: "Height and weight are required." });
+    }
+
+    const heightInMeters = height / 100;
+    const bmi = weight / (heightInMeters * heightInMeters);
+    let workoutRecommendation = "";
+    let dietRecommendation = "";
+
+    if (bmi < 18.5) {
+      workoutRecommendation = `Exercise Recommendations:\n
+      - Focus on strength training and resistance exercises to build muscle mass.\n
+      - Avoid excessive cardio, which may lead to unwanted weight loss.\n
+      - Recommended workouts: weight lifting, bodyweight exercises (push-ups, squats), and resistance band exercises.`;
+    
+      dietRecommendation = `Diet Recommendations:\n
+      - Focus on high-calorie, nutrient-dense foods to help with weight gain.\n
+      - Incorporate healthy fats (e.g., avocados, nuts, olive oil), lean proteins (e.g., chicken, fish), and complex carbohydrates (e.g., whole grains, legumes).\n
+      - Eat frequent, small meals throughout the day to increase caloric intake.\n
+      - Include protein shakes or smoothies as snacks.\n
+      - Calories to Burn: Aim for a balanced approach; the focus should be on building muscle rather than burning a high number of calories. Aim for moderate workouts that help with muscle growth rather than significant calorie deficit.`;
+    
+    } else if (bmi >= 18.5 && bmi < 24.9) {
+      workoutRecommendation = `Exercise Recommendations:\n
+      - Maintain a balanced workout routine that includes both cardio and strength training.\n
+      - Recommended workouts: a mix of cardio (running, cycling) and strength training (weights, resistance exercises).`;
+    
+      dietRecommendation = `Diet Recommendations:\n
+      - Maintain a balanced diet with a mix of carbohydrates, proteins, and fats.\n
+      - Focus on nutrient-dense foods like fruits, vegetables, lean proteins, and whole grains.\n
+      - Keep hydrated and monitor portion sizes to maintain weight.\n
+      - Calories to Burn: Maintain current weight; aim for a moderate caloric burn depending on your activity level. Typically, 300-500 calories per workout session is sufficient to keep fit.`;
+    
+    } else if (bmi >= 25 && bmi < 29.9) {
+      workoutRecommendation = `Exercise Recommendations:\n
+      - Incorporate both cardio and strength training. Cardio helps burn calories, while strength training helps build muscle and boost metabolism.\n
+      - Recommended workouts: aerobic exercises (walking, jogging, swimming), strength training (weight lifting, resistance exercises).`;
+    
+      dietRecommendation = `Diet Recommendations:\n
+      - Focus on a calorie deficit diet with nutrient-dense foods to promote weight loss.\n
+      - Incorporate plenty of vegetables, fruits, lean proteins, and whole grains.\n
+      - Avoid high-calorie, sugary, and processed foods.\n
+      - Control portion sizes and avoid late-night snacking.\n
+      - Calories to Burn: Aim to burn 500-1000 calories per workout session to create a sustainable calorie deficit for weight loss. Adjust based on individual needs and progress.`;
+    
+    } else {
+      workoutRecommendation = `Exercise Recommendations:\n
+      - Start with low-impact exercises and gradually increase intensity as fitness improves.\n
+      - Recommended workouts: walking, swimming, cycling, and strength training with light weights or bodyweight exercises.`;
+    
+      dietRecommendation = `Diet Recommendations:\n
+      - Focus on a significant calorie deficit with a balanced, nutrient-rich diet.\n
+      - Emphasize whole foods, lean proteins, vegetables, and whole grains.\n
+      - Avoid processed foods, sugary snacks, and high-calorie beverages.\n
+      - Consider consulting with a dietitian for a personalized meal plan.\n
+      - Calories to Burn: Aim to burn 500-1000 calories per workout session, adjusting based on fitness level and weight loss goals. Focus on consistency and gradual progress.`;
+    }
+    
+    
+
+    return res.status(200).json({
+      bmi: bmi.toFixed(2),
+      workoutRecommendation,
+      dietRecommendation,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// export const calculateBMI = async (req, res, next) => {
+//   try {
+//     // Ensure user is authenticated
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json({ message: "User not authenticated" });
+//     }
+
+//     // Fetch user to ensure existence
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Extract height and weight from request body
+//     const { height, weight } = req.body;
+//     if (!height || !weight) {
+//       return res.status(400).json({ message: "Height and weight are required." });
+//     }
+
+//     // Calculate BMI
+//     const heightInMeters = height / 100;
+//     const bmi = weight / (heightInMeters * heightInMeters);
+//     let workoutRecommendation = "";
+
+//     if (bmi < 18.5) {
+//       workoutRecommendation = "Focus on strength training to build muscle mass.";
+//     } else if (bmi >= 18.5 && bmi < 24.9) {
+//       workoutRecommendation = "Maintain a balanced workout routine.";
+//     } else if (bmi >= 25 && bmi < 29.9) {
+//       workoutRecommendation = "Incorporate cardio exercises to burn fat.";
+//     } else {
+//       workoutRecommendation = "Start with low-impact exercises and gradually increase intensity.";
+//     }
+
+//     return res.status(200).json({ bmi: bmi.toFixed(2), workoutRecommendation });
+//   } catch (err) {
+//     return next(err);
+//   }
+// };
 
 export const getWorkoutsByDate = async (req, res, next) => {
   try {
@@ -302,3 +435,4 @@ const calculateCaloriesBurnt = (workoutDetails) => {
   const caloriesBurntPerMinute = 5; // Sample value, actual calculation may vary
   return durationInMinutes * caloriesBurntPerMinute * weightInKg;
 };
+

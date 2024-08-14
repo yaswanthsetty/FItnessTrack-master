@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
 import UserRoutes from "./routes/User.js";
+// import bmiRoutes from "./routes/bmi.js";
 
 dotenv.config();
 
@@ -22,6 +23,8 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+// app.use("/api", bmiRoutes);
 
 app.get("/", async (req, res) => {
   res.status(200).json({

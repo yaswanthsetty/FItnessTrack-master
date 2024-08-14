@@ -21,3 +21,9 @@ export const addWorkout = async (token, data) =>
   await API.post("/user/workout", data, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  // src/api/index.js
+export const calculateBMI = async (token, data) =>
+  await API.post("/user/calculateBMI", data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });

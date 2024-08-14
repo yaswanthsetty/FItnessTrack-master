@@ -7,6 +7,7 @@ import CategoryChart from "../components/cards/CategoryChart";
 import AddWorkout from "../components/AddWorkout";
 import WorkoutCard from "../components/cards/WorkoutCard";
 import { addWorkout, getDashboardDetails, getWorkouts } from "../api";
+import BMICalculator from "../components/BMICalculator";
 
 const Container = styled.div`
   flex: 1;
@@ -74,18 +75,20 @@ const Dashboard = () => {
 -30 kg
 -10 min`);
 
+  // Retrieve token from local storage
+  const token = localStorage.getItem("fittrack-app-token");
+
   const dashboardData = async () => {
     setLoading(true);
-    const token = localStorage.getItem("fittrack-app-token");
     await getDashboardDetails(token).then((res) => {
       setData(res.data);
       console.log(res.data);
       setLoading(false);
     });
   };
+
   const getTodaysWorkout = async () => {
     setLoading(true);
-    const token = localStorage.getItem("fittrack-app-token");
     await getWorkouts(token, "").then((res) => {
       setTodaysWorkouts(res?.data?.todaysWorkouts);
       console.log(res.data);
@@ -95,7 +98,6 @@ const Dashboard = () => {
 
   const addNewWorkout = async () => {
     setButtonLoading(true);
-    const token = localStorage.getItem("fittrack-app-token");
     await addWorkout(token, { workoutString: workout })
       .then((res) => {
         dashboardData();
@@ -111,6 +113,7 @@ const Dashboard = () => {
     dashboardData();
     getTodaysWorkout();
   }, []);
+
   return (
     <Container>
       <Wrapper>
@@ -130,6 +133,7 @@ const Dashboard = () => {
             addNewWorkout={addNewWorkout}
             buttonLoading={buttonLoading}
           />
+          <BMICalculator token={token} /> {/* Pass the token to BMICalculator */}
         </FlexWrap>
 
         <Section>
