@@ -416,7 +416,7 @@ export const getWorkoutsByDate = async (req, res, next) => {
 
 
 
-export const addWorkout = async (req, res, next) => {
+ export const addWorkout = async (req, res, next) => {
   try {
     const userId = req.user?.id;
     const { workoutString } = req.body;
@@ -436,6 +436,7 @@ export const addWorkout = async (req, res, next) => {
 
     const parsedWorkouts = [];
     let currentCategory = "";
+    
 
     // Loop through each line to parse workout details
     for (let i = 0; i < eachworkout.length; i++) {
@@ -498,4 +499,3 @@ const calculateCaloriesBurnt = (workoutDetails) => {
   const caloriesBurntPerMinute = 5; // Sample value, actual calculation may vary
   return durationInMinutes * caloriesBurntPerMinute * weightInKg;
 };
-

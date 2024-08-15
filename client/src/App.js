@@ -8,6 +8,8 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Workouts from "./pages/Workouts";
 import Tutorials from "./pages/Tutorials";
+import Blog from "./pages/blogs";
+import Contact from "./pages/contact";
 
 const Container = styled.div`
   width: 100%;
@@ -33,6 +35,8 @@ function App() {
               <Route path="/" exact element={<Dashboard />} />
               <Route path="/workouts" exact element={<Workouts />} />
               <Route path="/tutorials" exact element={<Tutorials />} />
+              <Route path="/blogs" exact element={<Blog />} />
+              <Route path="/contact" exact element={<Contact/>}/>
             </Routes>
           </Container>
         ) : (

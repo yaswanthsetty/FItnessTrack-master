@@ -5,6 +5,29 @@ import Button from "./Button";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../redux/reducers/userSlice";
 
+// Custom Alert Component
+const AlertContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px;
+  border-radius: 5px;
+  color: #fff;
+  background-color: ${(props) => (props.type === "success" ? "#28a745" : "#dc3545")};
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+`;
+
+const Alert = ({ type, message, onClose }) => {
+  return (
+    <AlertContainer type={type}>
+      {message}
+      <button onClick={onClose} style={{ marginLeft: "15px", border: "none", background: "transparent", color: "#fff" }}>x</button>
+    </AlertContainer>
+  );
+};
+
+// SignIn Component
 const Container = styled.div`
   width: 100%;
   max-width: 500px;
@@ -31,10 +54,11 @@ const SignIn = () => {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [alert, setAlert] = useState({ type: "", message: "", visible: false });
 
   const validateInputs = () => {
     if (!email || !password) {
-      alert("Please fill in all fields");
+      setAlert({ type: "error", message: "Please fill in all fields", visible: true });
       return false;
     }
     return true;
@@ -53,7 +77,7 @@ const SignIn = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email, // Correct the payload data
+          email: email,
           password: password,
         }),
       });
@@ -68,18 +92,23 @@ const SignIn = () => {
       // Dispatch success action
       dispatch(loginSuccess(data));
 
-      alert("Login Successful!");
+      setAlert({ type: "success", message: "Login Successful!", visible: true });
     } catch (error) {
       console.error('Error:', error);
-      alert("Failed to sign in. Please try again.");
+      setAlert({ type: "error", message: "Failed to sign in. Please try again.", visible: true });
     } finally {
       setLoading(false);
       setButtonDisabled(false);
     }
   };
 
+  const handleCloseAlert = () => {
+    setAlert({ ...alert, visible: false });
+  };
+
   return (
     <Container>
+      {alert.visible && <Alert type={alert.type} message={alert.message} onClose={handleCloseAlert} />}
       <div>
         <Title>Welcome to Fittrack 👋</Title>
         <Span>Please login with your details here</Span>
